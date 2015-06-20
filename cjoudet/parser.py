@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import csv
 import re
-import isodate
 
 def readDuration(s):
     duration = 0
@@ -53,12 +52,14 @@ def readDuration(s):
 def parseRelevantTopicId(relevantTopicId):
 	m = re.split(';', relevantTopicId)
 	if m:
+		for i in range(len(m)):
+			m[i] = m[i][3:]
 		return m
 	else:
 		if relevantTopicId == "":
 			return []
 		else:
-			return [].append(relevantTopicId)
+			return [].append(relevantTopicId[3:])
 
 
 print('Beginning parsing')
@@ -96,8 +97,7 @@ for element in trainingList:
 				if j == 9:
 					print(str(readDuration(element[j])) + "	", end="")
 				elif j == 15:
-					for topic in parseRelevantTopicId(element[j]):
-						print(topic + " TTT ", end= "")
+					print(parseRelevantTopicId(element[j]))
 				else:
 					print(element[j] + "	", end="")
 		print()
