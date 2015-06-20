@@ -74,10 +74,8 @@ def useSVM(tfidf15, trainingList):
 	j = 0
 	tot = 0
 	for element in trainingList:
-		if (j%9) == 0:
+		if (j%4) != 0:
 			tot += 1
-			print(str(j))
-			print(str(element[0]))
 			# print(str(j))
 			topicList = parseRelevantTopicId(element[15])
 			res = []
@@ -102,7 +100,7 @@ def useSVM(tfidf15, trainingList):
 	# La c'est bon on a build X et Y
 	# maintenant on passe au test
 	print('beginning fitting')
-	clf = svm.SVC(kernel="sigmoid")
+	clf = svm.SVC(kernel="linear", C=1.3)
 	print('beginning fitting')	
 	clf.fit(X, Y) 
 	print('fit done')
