@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import time
+from math import log, pow, exp
 
 def parseLine(line):
     if line[0] == ',':
@@ -90,7 +91,6 @@ def parseTopicIDS(topicIDS):
             return [].append(topicIDS)
 
 r = open('data/train_sample.csv', 'r', newline='', encoding='utf-8')
-debug = open('debug.txt', 'w', encoding='utf-8')
 
 numCat = 15
 catsToIDs = {1: 0, 2: 1, 10: 2, 15: 3, 17: 4, 19: 5, 20: 6, 22: 7, 23: 8, 24: 9, 25: 10, 26: 11, 27: 12, 28: 13, 29: 14}
@@ -130,11 +130,27 @@ r.close()
 
 print('Took {}s'.format(time.clock()-start))
 
+differentTopics = {}
 for i in range(len(catRows)):
+    for t in catTopics[i]:
+        differentTopics[t] = 0
+
+sumRows = 0
+for i in range(len(catRows)):
+    sumRows += len(catRows[i])
+    for t in catTopics[i]:
+        differentTopics[t] += 1
+
     print('Cat {} has {} elements'.format(IDsToCats[i], len(catRows[i])))
     print('has {} different topics'.format(len(catTopics[i])))
 print()
+print('Total elements : {}'.format(sumRows))
+print('Total different topics : {}'.format(len(differentTopics)))
 print()
+print()
+
+for k in differentTopics.keys():
+    differentTopics[k] = log(numCat/differentTopics[k])
 
 
 r = open('data/test_sample.csv', 'r', newline='', encoding='utf-8')
@@ -143,6 +159,8 @@ w = open('results.csv', 'w')
 i = 0
 start = time.clock()
 w.write('id;video_category_id\n')
+nothingCount = 0
+newTopics = {}
 for line in r.readlines():
     if i == 0:
         i += 1
@@ -151,11 +169,6 @@ for line in r.readlines():
     #print(i)
     line = line.replace('\\"', '""')
     row = parseLine(line)
-    
-    if len(row) != 16:
-        debug.write('{}\n\n'.format(i))
-        debug.write('{}\n\n'.format(len(row)))
-        debug.write('{}\n\n'.format(row))
 
     testID = int(row[0])
     row[9] = readDuration(row[9])
@@ -170,10 +183,18 @@ for line in r.readlines():
     for t in topics:
         for k in range(numCat):
             if t in catTopics[k]:
-                scores[k] += catTopics[k][t]
+                scores[k] += catTopics[k][t]/catCounts[k] * differentTopics[t]
+            elif t not in newTopics:
+                newTopics[t] = 1
 
+
+    nothing = True
     for i in range(numCat):
-        scores[i] = scores[i]/catCounts[i]
+        if scores[i] != 0:
+            nothing = False
+
+    if nothing:
+        nothingCount += 1
 
     maxScore = scores[0]
     maxID = 0
@@ -187,3 +208,6 @@ for line in r.readlines():
     i += 1
 r.close()
 w.close()
+
+print('Unsortable test elements : {}'.format(nothingCount))
+print('New different topics : {}'.format(len(newTopics)))
