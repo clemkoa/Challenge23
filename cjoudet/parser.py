@@ -70,10 +70,15 @@ def writeAnswer(tfidf14, tfidf15):
 def useSVM(tfidf15, trainingList):
 	X = []
 	Y = []
+	rand = [2, 11000, 45678, 123456, 100000, 200000]
 	j = 0
+	tot = 0
 	for element in trainingList:
-		if j < 100:
+		if (j%10) == 0:
+			tot += 1
 			print(str(j))
+			print(str(element[0]))
+			# print(str(j))
 			topicList = parseRelevantTopicId(element[15])
 			res = []
 			for i in range(numCat):
@@ -82,48 +87,57 @@ def useSVM(tfidf15, trainingList):
 					if topic in tfidf15[i].keys():
 						value += tfidf15[i][topic]
 				res.append(value)
-			X.append(X)
+			X.append(res)
 			Y.append(int(element[0]))
 		j += 1
 
+	print(tot)
 	# La c'est bon on a build X et Y
 	# maintenant on passe au test
 	print('beginning fitting')
-	clf = svm.NuSVC()
+	clf = svm.SVC()
 	print('beginning fitting')	
 	clf.fit(X, Y) 
 	print('fit done')
 
+	r = open('../../challenge_23_data/test_sample.csv', 'r', newline='', encoding='utf-8')
 	w = open('results.csv', 'w')
 
 	w.write('id;video_category_id\n')
 
 	i = 0
-	j = 0
 	for line in r.readlines():
-		if j < 10:
-			print(str(j))
-			if i == 0:
-			    i += 1
-			    continue
-			line = line.replace('\\"', '""')
-			row = parseLine(line)
+		if i == 0:
+		    i += 1
+		    continue
+		line = line.replace('\\"', '""')
+		row = parseLine(line)
 
-			for i in range(numCat):
-				res = []
-				topicList = parseRelevantTopicId(row[15])
-				value = 0
-				for topic in topicList:
-					if topic in tfidf15[i].keys():
-						value += tfidf15[i][topic]
+		res = []
+		topicList1 = parseRelevantTopicId(row[15])
+		topicList2 = parseRelevantTopicId(row[14])
+		
+		for i in range(numCat):
+			value = 0
+			for topic in topicList1:
+				if topic in tfidf15[i].keys():
+					# print('val :' + str(tfidf15[i][topic]))
+					value += tfidf15[i][topic]
+			for topic in topicList2:
+				if topic in tfidf15[i].keys():
+					# print('YEAH')
+					value += tfidf15[i][topic]
+			if value == 0.0:
+				res.append(0)
+			else:
 				res.append(value)
 
-			dec = clf.decision_function(res)
-			j = getMaxIndex(dec)
-			w.write(str(row[0]) + ';' + str(IDsToCats[j]) + '\n')
-		j += 1
-
-	return
+		dec = clf.decision_function(res)
+		# print(clf.predict(res))
+		# print(res)
+		# print(dec)
+		w.write(str(row[0]) + ';' + str(clf.predict(res)[0]) + '\n')
+	return ""
 
 
 
@@ -226,8 +240,6 @@ def parseRelevantTopicId(relevantTopicId):
 		return []
 	m = re.split(';', relevantTopicId)
 	if m:
-		for i in range(len(m)):
-			m[i] = m[i]
 		return m
 	else:
 		return [].append(relevantTopicId)
@@ -261,24 +273,30 @@ def initiateCategories(trainingList):
 		if element[0] not in categories:
 			categories.append(element[0])
 
-	print(categories)
+	# print(categories)
 	return categories
 
 def computeTFIDF(id, trainingList):
 	apparitions = [{} for i in range(numCat)]
 	print(apparitions)
 
-	j = 0
 	for i in range(numCat):
 		for video in trainingList:
-			if (j%10) != 0:
-				if int(video[0]) == IDsToCats[i]:
-					for topic in parseRelevantTopicId(video[id]):
-						if topic not in apparitions[i].keys():
-							apparitions[i][topic] = 1
-						else:
-							apparitions[i][topic] += 1
-			i += 1
+			if int(video[0]) == IDsToCats[i]:
+				for topic in parseRelevantTopicId(video[14]):
+					if topic not in apparitions[i].keys():
+						apparitions[i][topic] = 1
+					else:
+						apparitions[i][topic] += 1
+
+	for i in range(numCat):
+		for video in trainingList:
+			if int(video[0]) == IDsToCats[i]:
+				for topic in parseRelevantTopicId(video[15]):
+					if topic not in apparitions[i].keys():
+						apparitions[i][topic] = 1
+					else:
+						apparitions[i][topic] += 1
 
 	print('etape 1 done')
 
@@ -298,29 +316,31 @@ def computeTFIDF(id, trainingList):
 
 	idf = {}
 	for topic in numCatForTopicId.keys():
+		# print(topic)
 		idf[topic] = math.log(float(numCat)/float(numCatForTopicId[topic]))
 
+	# print(idf.keys())
 	print('etape 3 done')
 
 	# ETAPE 4
 
 	tf =[{} for i in range (numCat)]
 	for i in range(numCat):
-		somme =0
+		somme = 0
 		for topic in apparitions[i].keys():
 			somme += apparitions[i][topic]
 
 		for topic in apparitions[i].keys():
-			tf[i][topic] = float(apparitions[i][topic])/float(somme)
+			tf[i][topic] = apparitions[i][topic]*1.0/somme
+
 
 	print('etape 4 done')
 
 	# ETAPE NUMERO 5
 	tfidf = [{} for i in range(numCat)]
-
 	for i in range(numCat):
 		for topic in tf[i].keys():
-			tfidf[i][topic] = tf[i][topic]*math.pow(idf[topic],3)
+			tfidf[i][topic] = tf[i][topic]*idf[topic]
 
 	print('etape 5 done')
 	return tfidf
@@ -329,7 +349,7 @@ def computeTFIDF(id, trainingList):
 def main():
 	trainingList = initiateTrainingList()
 	tfidf15 = computeTFIDF(15, trainingList)
-	tfidf14 = computeTFIDF(14, trainingList)
+	# tfidf14 = computeTFIDF(14, trainingList)
 
 	# writeAnswer(tfidf14, tfidf15)
 	useSVM(tfidf15, trainingList)
