@@ -3,17 +3,62 @@ import csv
 import re
 import isodate
 
-def parseDuration(word):
-	sum = 0
-	m = re.findall('M([0-9]*)S', word)
+def readDuration(s):
+    duration = 0
+
+    if s == 'NA' or s == "":
+        return 0
+
+    #print(s)
+    s = s[1:] # Remove the 'P'
+
+    if s[0] != 'T':
+        i = 0
+        while s[i] != 'D':
+            i += 1
+
+        val = s[0:i]
+        
+        #print('Days : {}'.format(val))
+        duration += val*24*3600
+
+        s = s[i+1:]
+    
+    s = s[1:] # Remove the 'T'
+    #print(s)
+
+    while s != '':
+        i = 0
+        while s[i] != 'H' and s[i] != 'M' and s[i] != 'S':
+            i += 1
+        
+        val = int(s[0:i])
+        
+        if s[i] == 'H':
+            #print('Hours : {}'.format(val))
+            duration += val*3600
+        elif s[i] == 'M':
+            #print('Minutes : {}'.format(val))
+            duration += val*60
+        elif s[i] == 'S':
+            #print('Seconds : {}'.format(val))
+            duration += val
+
+        s = s[i+1:]
+
+    #print('Duration : {}'.format(duration))
+    return duration
+
+
+def parseRelevantTopicId(relevantTopicId):
+	m = re.split(';', relevantTopicId)
 	if m:
-		sum += int(m[0])
+		return m
 	else:
-		print(word + "	nope	")
-		# m = re.findall('PT([0-9]*)S', word)
-		# return m[0]
-	m = re.findall('([0-9]*)M', word)
-	return sum
+		if relevantTopicId == "":
+			return []
+		else:
+			return [].append(relevantTopicId)
 
 
 print('Beginning parsing')
@@ -49,8 +94,12 @@ for element in trainingList:
 		for j in range(len(element)):
 			if j in tab:
 				if j == 9:
-					print(parseDuration(element[j]), end="")
-				print(element[j] + "	", end="")
+					print(str(readDuration(element[j])) + "	", end="")
+				elif j == 15:
+					for topic in parseRelevantTopicId(element[j]):
+						print(topic + " TTT ", end= "")
+				else:
+					print(element[j] + "	", end="")
 		print()
 	i += 1
 
