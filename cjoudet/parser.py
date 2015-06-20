@@ -74,7 +74,7 @@ def useSVM(tfidf15, trainingList):
 	j = 0
 	tot = 0
 	for element in trainingList:
-		if (j%10) == 0:
+		if (j%9) == 0:
 			tot += 1
 			print(str(j))
 			print(str(element[0]))
@@ -87,15 +87,22 @@ def useSVM(tfidf15, trainingList):
 					if topic in tfidf15[i].keys():
 						value += tfidf15[i][topic]
 				res.append(value)
+			# res.append(readDuration(element[9]))
+			# if element[5] == 'NA' or element[6] == 'NA':
+			# 	res.append(0)
+			# elif (float(element[5])+float(element[6])) == 0:
+			# 	res.append(0)
+			# else:
+			# 	res.append(float(element[6])/(float(element[5])+float(element[6])))			
 			X.append(res)
 			Y.append(int(element[0]))
 		j += 1
 
-	print(tot)
+	# print(tot)
 	# La c'est bon on a build X et Y
 	# maintenant on passe au test
 	print('beginning fitting')
-	clf = svm.SVC()
+	clf = svm.SVC(kernel="sigmoid")
 	print('beginning fitting')	
 	clf.fit(X, Y) 
 	print('fit done')
@@ -113,7 +120,7 @@ def useSVM(tfidf15, trainingList):
 		line = line.replace('\\"', '""')
 		row = parseLine(line)
 
-		res = []
+		res = [[]]
 		topicList1 = parseRelevantTopicId(row[15])
 		topicList2 = parseRelevantTopicId(row[14])
 		
@@ -128,9 +135,15 @@ def useSVM(tfidf15, trainingList):
 					# print('YEAH')
 					value += tfidf15[i][topic]
 			if value == 0.0:
-				res.append(0)
+				res[0].append(0)
 			else:
-				res.append(value)
+				res[0].append(value)
+		# res[0].append(readDuration(row[9]))
+		# if (float(row[5])+float(row[6])) == 0:
+		# 	res[0].append(1.0)
+		# else:
+		# 	res[0].append(float(row[6])/(float(row[5])+float(row[6])))
+		
 
 		dec = clf.decision_function(res)
 		# print(clf.predict(res))
@@ -317,7 +330,7 @@ def computeTFIDF(id, trainingList):
 	idf = {}
 	for topic in numCatForTopicId.keys():
 		# print(topic)
-		idf[topic] = math.log(float(numCat)/float(numCatForTopicId[topic]))
+		idf[topic] = float(numCat)/float(numCatForTopicId[topic])
 
 	# print(idf.keys())
 	print('etape 3 done')
@@ -340,7 +353,7 @@ def computeTFIDF(id, trainingList):
 	tfidf = [{} for i in range(numCat)]
 	for i in range(numCat):
 		for topic in tf[i].keys():
-			tfidf[i][topic] = tf[i][topic]*idf[topic]
+			tfidf[i][topic] = tf[i][topic]*math.pow(idf[topic],3)
 
 	print('etape 5 done')
 	return tfidf
