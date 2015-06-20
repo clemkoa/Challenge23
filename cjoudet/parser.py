@@ -13,6 +13,7 @@ def parseDuration(word):
 		# m = re.findall('PT([0-9]*)S', word)
 		# return m[0]
 	m = re.findall('([0-9]*)M', word)
+	print('test')
 	return sum
 
 
