@@ -53,13 +53,13 @@ def parseRelevantTopicId(relevantTopicId):
 	m = re.split(';', relevantTopicId)
 	if m:
 		for i in range(len(m)):
-			m[i] = m[i][3:]
+			m[i] = m[i]
 		return m
 	else:
 		if relevantTopicId == "":
 			return []
 		else:
-			return [].append(relevantTopicId[3:])
+			return [].append(relevantTopicId)
 
 
 print('Beginning parsing')
@@ -88,16 +88,18 @@ for element in trainingList:
 
 print(categories)
 
-i = 0
-tab = [9,12,15]
+i = 1000
+tab = [9,12,14,15]
 for element in trainingList:
-	if i < 100:
+	if i < 1100:
 		for j in range(len(element)):
 			if j in tab:
 				if j == 9:
 					print(str(readDuration(element[j])) + "	", end="")
+				elif j == 14:
+					print(str(parseRelevantTopicId(element[j])) + "	", end="")
 				elif j == 15:
-					print(parseRelevantTopicId(element[j]))
+					print(str(parseRelevantTopicId(element[j])) + "	", end="")
 				else:
 					print(element[j] + "	", end="")
 		print()
