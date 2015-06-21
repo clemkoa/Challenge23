@@ -116,14 +116,14 @@ def useSVM(tfidf15, trainingList):
 	#clf = linear_model.SGDClassifier(shuffle=True)
 	# clf = GaussianNB()
 	# clf = ensemble.BaggingClassifier(n_estimators=20)
-	clf = ensemble.RandomForestClassifier(n_estimators=25, warm_start=True, criterion='entropy')
+	clf = ensemble.RandomForestClassifier(n_estimators=20, warm_start=True, criterion="entropy")
 
 	print('beginning fitting')	
 	clf.fit(X, Y) 
 	print('fit done')
 
 	r = open('../../challenge_23_data/test_sample.csv', 'r', newline='', encoding='utf-8')
-	w = open('results3.csv', 'w')
+	w = open('results.csv', 'w')
 
 	w.write('id;video_category_id\n')
 
@@ -374,7 +374,7 @@ def computeTFIDF(id, trainingList):
 	tfidf = [{} for i in range(numCat)]
 	for i in range(numCat):
 		for topic in tf[i].keys():
-			tfidf[i][topic] = tf[i][topic]*math.pow(idf[topic],2)
+			tfidf[i][topic] = tf[i][topic]*math.pow(idf[topic],3)
 
 	print('etape 5 done')
 	return tfidf
