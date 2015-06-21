@@ -3,7 +3,11 @@ import csv
 import re
 import time
 import math
+import random
+from sklearn import linear_model
 from sklearn import svm
+from sklearn import ensemble
+from sklearn.naive_bayes import GaussianNB
 
 def parseLine(line):
     if line[0] == ',':
@@ -70,37 +74,45 @@ def writeAnswer(tfidf14, tfidf15):
 def useSVM(tfidf15, trainingList):
 	X = []
 	Y = []
-	rand = [2, 11000, 45678, 123456, 100000, 200000]
-	j = 0
-	tot = 0
+	#j = 0
+	#tot = 0
 	for element in trainingList:
-		if (j%4) != 0:
-			tot += 1
-			# print(str(j))
-			topicList = parseRelevantTopicId(element[15])
-			res = []
-			for i in range(numCat):
-				value = 0
-				for topic in topicList:
-					if topic in tfidf15[i].keys():
-						value += tfidf15[i][topic]
-				res.append(value)
-			# res.append(readDuration(element[9]))
-			# if element[5] == 'NA' or element[6] == 'NA':
-			# 	res.append(0)
-			# elif (float(element[5])+float(element[6])) == 0:
-			# 	res.append(0)
-			# else:
-			# 	res.append(float(element[6])/(float(element[5])+float(element[6])))			
-			X.append(res)
-			Y.append(int(element[0]))
-		j += 1
+	#	if (j%2) != 0:
+		# tot += 1
+		# print(str(j))
+		topicList1 = parseRelevantTopicId(element[15])
+		topicList2 = parseRelevantTopicId(element[14])
+		res = []
+		for i in range(numCat):
+			value = 0
+			for topic in topicList1:
+				if topic in tfidf15[i].keys():
+					value += tfidf15[i][topic]
+			for topic in topicList2:
+				if topic in tfidf15[i].keys():
+					value += tfidf15[i][topic]
+			res.append(value)
+			
+		# res.append(readDuration(element[9]))
+		# if element[5] == 'NA' or element[6] == 'NA':
+		# 	res.append(0)
+		# elif (float(element[5])+float(element[6])) == 0:
+		# 	res.append(0)
+		# else:
+		# 	res.append(float(element[6])/(float(element[5])+float(element[6])))			
+		X.append(res)
+		Y.append(int(element[0]))
+	#	j += 1
 
 	# print(tot)
 	# La c'est bon on a build X et Y
 	# maintenant on passe au test
-	print('beginning fitting')
-	clf = svm.SVC(kernel="linear", C=1.3)
+	print('setting model')
+	#clf = linear_model.SGDClassifier(shuffle=True)
+	# clf = GaussianNB()
+	# clf = ensemble.BaggingClassifier(n_estimators=15)
+	clf = ensemble.RandomForestClassifier(n_estimators=20)
+
 	print('beginning fitting')	
 	clf.fit(X, Y) 
 	print('fit done')
@@ -110,10 +122,10 @@ def useSVM(tfidf15, trainingList):
 
 	w.write('id;video_category_id\n')
 
-	i = 0
+	m = 0
 	for line in r.readlines():
-		if i == 0:
-		    i += 1
+		if m == 0:
+		    m += 1
 		    continue
 		line = line.replace('\\"', '""')
 		row = parseLine(line)
@@ -126,11 +138,9 @@ def useSVM(tfidf15, trainingList):
 			value = 0
 			for topic in topicList1:
 				if topic in tfidf15[i].keys():
-					# print('val :' + str(tfidf15[i][topic]))
 					value += tfidf15[i][topic]
 			for topic in topicList2:
 				if topic in tfidf15[i].keys():
-					# print('YEAH')
 					value += tfidf15[i][topic]
 			if value == 0.0:
 				res[0].append(0)
@@ -143,7 +153,7 @@ def useSVM(tfidf15, trainingList):
 		# 	res[0].append(float(row[6])/(float(row[5])+float(row[6])))
 		
 
-		dec = clf.decision_function(res)
+		#dec = clf.decision_function(res)
 		# print(clf.predict(res))
 		# print(res)
 		# print(dec)
@@ -294,7 +304,7 @@ def computeTFIDF(id, trainingList):
 	for i in range(numCat):
 		for video in trainingList:
 			if int(video[0]) == IDsToCats[i]:
-				for topic in parseRelevantTopicId(video[14]):
+				for topic in parseRelevantTopicId(video[15]):
 					if topic not in apparitions[i].keys():
 						apparitions[i][topic] = 1
 					else:
@@ -303,7 +313,7 @@ def computeTFIDF(id, trainingList):
 	for i in range(numCat):
 		for video in trainingList:
 			if int(video[0]) == IDsToCats[i]:
-				for topic in parseRelevantTopicId(video[15]):
+				for topic in parseRelevantTopicId(video[14]):
 					if topic not in apparitions[i].keys():
 						apparitions[i][topic] = 1
 					else:
@@ -357,6 +367,168 @@ def computeTFIDF(id, trainingList):
 	return tfidf
 
 
+def computeCrossTFIDF(id, trainingList, k, rand):
+	print(str(rand))
+	apparitions = [{} for i in range(numCat)]
+
+	for i in range(numCat):
+		j = 0
+		for video in trainingList:
+			if ((j+rand) % k) != 0:
+				if int(video[0]) == IDsToCats[i]:
+					for topic in parseRelevantTopicId(video[15]):
+						if topic not in apparitions[i].keys():
+							apparitions[i][topic] = 1
+						else:
+							apparitions[i][topic] += 1
+			j += 1
+
+	j = 0
+	for i in range(numCat):
+		j = 0
+		for video in trainingList:
+			if ((j+rand)%k) != 0:
+				if int(video[0]) == IDsToCats[i]:
+					for topic in parseRelevantTopicId(video[14]):
+						if topic not in apparitions[i].keys():
+							apparitions[i][topic] = 1
+						else:
+							apparitions[i][topic] += 1
+			j += 1
+
+	# ETAPE NUMERO 2 
+
+	numCatForTopicId = {}
+	for i in range(numCat):
+		for topic in apparitions[i].keys():
+			if topic in numCatForTopicId.keys():
+				numCatForTopicId[topic] += 1
+			else:
+				numCatForTopicId[topic] = 1
+
+	# ETAPE NUMERO 3
+
+	idf = {}
+	for topic in numCatForTopicId.keys():
+		# print(topic)
+		idf[topic] = float(numCat)/float(numCatForTopicId[topic])
+
+	# ETAPE 4
+
+	tf =[{} for i in range (numCat)]
+	for i in range(numCat):
+		somme = 0
+		for topic in apparitions[i].keys():
+			somme += apparitions[i][topic]
+
+		for topic in apparitions[i].keys():
+			tf[i][topic] = apparitions[i][topic]*1.0/somme
+
+	# ETAPE NUMERO 5
+	tfidf = [{} for i in range(numCat)]
+	for i in range(numCat):
+		for topic in tf[i].keys():
+			tfidf[i][topic] = tf[i][topic]*math.pow(idf[topic],3)
+
+	#print('etape 5 done')
+	return tfidf
+
+def crossSVM(tfidf15, trainingList, k, rando):
+	X = []
+	Y = []
+	print(str(rando))
+	#j = 0
+	#tot = 0
+	j = 0
+	for element in trainingList:
+		if ((j+rando)%k) != 0:
+			# print(str(j))
+			topicList1 = parseRelevantTopicId(element[15])
+			topicList2 = parseRelevantTopicId(element[14])
+			res = []
+			for i in range(numCat):
+				value = 0
+				for topic in topicList1:
+					if topic in tfidf15[i].keys():
+						value += tfidf15[i][topic]
+				for topic in topicList2:
+					if topic in tfidf15[i].keys():
+						value += tfidf15[i][topic]
+				res.append(value)
+			# res.append(readDuration(element[9]))
+			# if element[5] == 'NA' or element[6] == 'NA':
+			# 	res.append(0)
+			# elif (float(element[5])+float(element[6])) == 0:
+			# 	res.append(0)
+			# else:
+			# 	res.append(float(element[6])/(float(element[5])+float(element[6])))			
+			X.append(res)
+			Y.append(int(element[0]))
+		j += 1
+
+	# La c'est bon on a build X et Y
+	# maintenant on passe au test
+	print('Setting classifier')
+	clf = ensemble.BaggingClassifier(n_estimators=20)
+	# clf = linear_model.SGDClassifier(shuffle=True)
+	# clf = GaussianNB()
+	# clf = ensemble.RandomForestClassifier(n_estimators=20)
+
+	print('beginning fitting')	
+	clf.fit(X, Y) 
+	print('fit done')
+
+	print('Beggining cross test...')
+
+	confusionMatrix = [[0 for j in range(numCat)] for i in range(numCat)]
+	acc = 0
+	tot = 0
+	j = 0
+	l = 0
+	for row in trainingList:
+		if l == 0:
+		    l += 1
+		    continue
+
+		if ((j+rando)%k) == 0:
+			# print(str(j))
+			res = [[]]
+			topicList1 = parseRelevantTopicId(row[15])
+			topicList2 = parseRelevantTopicId(row[14])
+			
+			for i in range(numCat):
+				value = 0
+				for topic in topicList1:
+					if topic in tfidf15[i].keys():
+						value += tfidf15[i][topic]
+				for topic in topicList2:
+					if topic in tfidf15[i].keys():
+						value += tfidf15[i][topic]
+				if value == 0.0:
+					res[0].append(0)
+				else:
+					res[0].append(value)
+			# res[0].append(readDuration(row[9]))
+			# if (float(row[5])+float(row[6])) == 0:
+			# 	res[0].append(1.0)
+			# else:
+			# 	res[0].append(float(row[6])/(float(row[5])+float(row[6])))
+			temp = clf.predict(res)[0]
+			if (int(temp) == int(row[0])):
+				acc += 1
+			confusionMatrix[catsToIDs[int(row[0])]][catsToIDs[int(temp)]] += 1
+			tot += 1
+		j += 1
+	print()
+	print (float(acc)/float(tot))
+	print()
+	for i in range(numCat):
+		for j in range(numCat):
+			print(str(confusionMatrix[i][j]) + "	", end="")
+		print()
+
+	return ""
+
 def main():
 	trainingList = initiateTrainingList()
 	tfidf15 = computeTFIDF(15, trainingList)
@@ -367,13 +539,25 @@ def main():
 	return
 
 
+
+def crossValidation(k):
+	rand = int(random.random()*k)
+	print(str(rand))
+	trainingList = initiateTrainingList()
+	tfidf15 = computeCrossTFIDF(15, trainingList, k, rand)
+
+	crossSVM(tfidf15, trainingList, k, rand)
+	return
+
+
 # ETAPE NUMERO 1
 
 numCat = 15
 catsToIDs = {1: 0, 2: 1, 10: 2, 15: 3, 17: 4, 19: 5, 20: 6, 22: 7, 23: 8, 24: 9, 25: 10, 26: 11, 27: 12, 28: 13, 29: 14}
 IDsToCats = {0: 1, 1: 2, 2: 10, 3: 15, 4: 17, 5: 19, 6: 20, 7: 22, 8: 23, 9: 24, 10: 25, 11: 26, 12: 27, 13: 28, 14: 29}
 
-main()
+# main()
+crossValidation(10)
 
 # useSVM())
 
