@@ -273,7 +273,12 @@ def parseRelevantTopicId(relevantTopicId):
 	if m:
 		return m
 	else:
-		return [].append(relevantTopicId)
+		print(word + "	nope	")
+		# m = re.findall('PT([0-9]*)S', word)
+		# return m[0]
+	m = re.findall('([0-9]*)M', word)
+	print('test')
+	return sum
 
 def initiateTrainingList():
 	print('Beginning parsing')
