@@ -93,7 +93,7 @@ def useSVM(tfidf15, trainingList):
 				if topic in tfidf15[i].keys():
 					value += tfidf15[i][topic]
 			res.append(value)
-			
+
 		res.append(readDuration(element[9]))
 		if element[5] == 'NA' or element[6] == 'NA':
 			res.append(0)
@@ -101,10 +101,10 @@ def useSVM(tfidf15, trainingList):
 		# elif (float(element[5])+float(element[6])) == 0:
 		# 	res.append(0)
 		# else:
-		# 	res.append(float(element[6])/(float(element[5])+float(element[6])))			
+		# 	res.append(float(element[6])/(float(element[5])+float(element[6])))
 		else:
 			res.append(int(element[5]))
-			res.append(int(element[6]))		
+			res.append(int(element[6]))
 		X.append(res)
 		Y.append(int(element[0]))
 		# j += 1
@@ -120,8 +120,8 @@ def useSVM(tfidf15, trainingList):
 	# clf = ensemble.RandomForestClassifier(n_estimators=25, warm_start=True, criterion='entropy',
 	# 	class_weight={1: 10, 2: 10, 10: 10, 15: 10, 17: 10, 19: 10, 20: 10, 22: 10, 23: 10, 24: 5, 25: 10, 26: 10, 27: 5, 28: 10, 29: 10})
 
-	print('beginning fitting')	
-	clf.fit(X, Y) 
+	print('beginning fitting')
+	clf.fit(X, Y)
 	print('fit done')
 
 	r = open('../../challenge_23_data/final_test_alternate_file.csv', 'r', newline='', encoding='utf-8')
@@ -140,7 +140,7 @@ def useSVM(tfidf15, trainingList):
 		res = [[]]
 		topicList1 = parseRelevantTopicId(row[15])
 		topicList2 = parseRelevantTopicId(row[14])
-		
+
 		for i in range(numCat):
 			value = 0
 			for topic in topicList1:
@@ -160,7 +160,7 @@ def useSVM(tfidf15, trainingList):
 		else:
 			res[0].append(int(row[5]))
 			res[0].append(int(row[6]))
-		
+
 
 		#dec = clf.decision_function(res)
 		# print(clf.predict(res))
@@ -234,12 +234,12 @@ def readDuration(s):
             i += 1
 
         val = s[0:i]
-        
+
         #print('Days : {}'.format(val))
         duration += val*24*3600
 
         s = s[i+1:]
-    
+
     s = s[1:] # Remove the 'T'
     #print(s)
 
@@ -247,9 +247,9 @@ def readDuration(s):
         i = 0
         while s[i] != 'H' and s[i] != 'M' and s[i] != 'S':
             i += 1
-        
+
         val = int(s[0:i])
-        
+
         if s[i] == 'H':
             #print('Hours : {}'.format(val))
             duration += val*3600
@@ -298,7 +298,7 @@ def initiateCategories(trainingList):
 	categories = []
 	# extracting the data:
 	for element in trainingList:
-		if element[0] == "": 
+		if element[0] == "":
 			#parce qu'on avait deux listes avec des numéros empty au début (c'est du à une virgule qui traîne dans le fond de celled d'avant)
 			element.pop(0)
 		if element[0] not in categories:
@@ -337,7 +337,7 @@ def computeTFIDF(id, trainingList):
 
 	print('etape 1 done')
 
-	# ETAPE NUMERO 2 
+	# ETAPE NUMERO 2
 
 	numCatForTopicId = {}
 	for i in range(numCat):
@@ -416,7 +416,7 @@ def computeCrossTFIDF(id, trainingList, k, rand):
 			n += 1
 			j += 1
 
-	# ETAPE NUMERO 2 
+	# ETAPE NUMERO 2
 
 	numCatForTopicId = {}
 	for i in range(numCat):
@@ -499,8 +499,8 @@ def crossSVM(tfidf15, trainingList, k, rando):
 	clf = ensemble.RandomForestClassifier(n_estimators=25, warm_start=True, criterion='entropy',
 		class_weight={1: 10, 2: 10, 10: 10, 15: 10, 17: 10, 19: 10, 20: 10, 22: 10, 23: 10, 24: 2, 25: 10, 26: 10, 27: 2, 28: 10, 29: 10})
 
-	print('beginning fitting')	
-	clf.fit(X, Y) 
+	print('beginning fitting')
+	clf.fit(X, Y)
 	print('fit done')
 
 	print('Beggining cross test...')
@@ -520,7 +520,7 @@ def crossSVM(tfidf15, trainingList, k, rando):
 			res = [[]]
 			topicList1 = parseRelevantTopicId(row[15])
 			topicList2 = parseRelevantTopicId(row[14])
-			
+
 			for i in range(numCat):
 				value = 0
 				for topic in topicList1:
@@ -605,14 +605,14 @@ main()
 # 		print()
 # 	i += 1
 # lin_clf = svm.LinearSVC()
-# lin_clf.fit(X, Y) 
+# lin_clf.fit(X, Y)
 # LinearSVC(C=1.0, class_weight=None, dual=True, fit_intercept=True, intercept_scaling=1, loss='squared_hinge', max_iter=1000, multi_class='ovr', penalty='l2', random_state=None, tol=0.0001, verbose=0)
 # dec = lin_clf.decision_function([[1]])
 # dec.shape[1]
 # X = [[1,2], [5,8], [1.5,1.8], [8,8],[1,0.6], [9,11]]
 # Y = [0, 1, 2, 1, 2,0 ]
 # clf = svm.SVC(kernel='rbf')
-# clf.fit(X, Y) 
+# clf.fit(X, Y)
 # # SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=3, gamma=0.0, kernel='rbf', max_iter=-1, probability=False, random_state=None, shrinking=True, tol=0.001, verbose=False)
 # dec = clf.decision_function([1,3])
 # print(dec)
