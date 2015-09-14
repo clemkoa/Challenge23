@@ -94,17 +94,17 @@ def useSVM(tfidf15, trainingList):
 					value += tfidf15[i][topic]
 			res.append(value)
 			
-		res.append(readDuration(element[9]))
-		if element[5] == 'NA' or element[6] == 'NA':
-			res.append(0)
-			res.append(0)
+		# res.append(readDuration(element[9]))
+		# if element[5] == 'NA' or element[6] == 'NA':
+		# 	res.append(0)
+		# 	res.append(0)
 		# elif (float(element[5])+float(element[6])) == 0:
 		# 	res.append(0)
 		# else:
 		# 	res.append(float(element[6])/(float(element[5])+float(element[6])))			
-		else:
-			res.append(int(element[5]))
-			res.append(int(element[6]))		
+		# else:
+		# 	res.append(int(element[5]))
+		# 	res.append(int(element[6]))		
 		X.append(res)
 		Y.append(int(element[0]))
 		# j += 1
@@ -113,18 +113,16 @@ def useSVM(tfidf15, trainingList):
 	# La c'est bon on a build X et Y
 	# maintenant on passe au test
 	print('setting model')
-	# clf = linear_model.SGDClassifier(shuffle=True)
+	clf = linear_model.SGDClassifier(shuffle=True, warm_start=True, loss='log')
 	# clf = GaussianNB()
 	# clf = ensemble.BaggingClassifier(n_estimators=20)
-	clf = ensemble.RandomForestClassifier(n_estimators=25, warm_start=True, criterion='entropy')
-	# clf = ensemble.RandomForestClassifier(n_estimators=25, warm_start=True, criterion='entropy',
-	# 	class_weight={1: 10, 2: 10, 10: 10, 15: 10, 17: 10, 19: 10, 20: 10, 22: 10, 23: 10, 24: 5, 25: 10, 26: 10, 27: 5, 28: 10, 29: 10})
+	# clf = ensemble.RandomForestClassifier(n_estimators=25, warm_start=True, criterion="entropy")
 
 	print('beginning fitting')	
 	clf.fit(X, Y) 
 	print('fit done')
 
-	r = open('../../challenge_23_data/final_test_alternate_file.csv', 'r', newline='', encoding='utf-8')
+	r = open('../../challenge_23_data/test_sample.csv', 'r', newline='', encoding='utf-8')
 	w = open('results.csv', 'w')
 
 	w.write('id;video_category_id\n')
@@ -153,20 +151,19 @@ def useSVM(tfidf15, trainingList):
 				res[0].append(0)
 			else:
 				res[0].append(value)
-		res[0].append(readDuration(row[9]))
-		if row[5] == 'NA' or row[6] == 'NA':
-			res[0].append(0)
-			res[0].append(0)
-		else:
-			res[0].append(int(row[5]))
-			res[0].append(int(row[6]))
+		# res[0].append(readDuration(row[9]))
+		# if row[5] == 'NA' or row[6] == 'NA':
+		# 	res[0].append(0)
+		# 	res[0].append(0)
+		# else:
+		# 	res[0].append(int(row[5]))
+		# 	res[0].append(int(row[6]))
 		
 
 		#dec = clf.decision_function(res)
 		# print(clf.predict(res))
 		# print(res)
 		# print(dec)
-		# print(clf.predict_proba(res))
 		w.write(str(row[0]) + ';' + str(clf.predict(res)[0]) + '\n')
 	return ""
 
@@ -377,7 +374,7 @@ def computeTFIDF(id, trainingList):
 	tfidf = [{} for i in range(numCat)]
 	for i in range(numCat):
 		for topic in tf[i].keys():
-			tfidf[i][topic] = tf[i][topic]*math.pow(idf[topic],2)
+			tfidf[i][topic] = tf[i][topic]*math.pow(idf[topic],3)
 
 	print('etape 5 done')
 	return tfidf
@@ -494,10 +491,10 @@ def crossSVM(tfidf15, trainingList, k, rando):
 	print('Setting classifier')
 	# clf = ensemble.GradientBoostingClassifier()
 	# clf = ensemble.BaggingClassifier(n_estimators=20)
-	# clf = linear_model.SGDClassifier(shuffle=True)
+	# clf = linear_model.SGDClassifier(shuffle=True, warm_start=True)
 	# clf = GaussianNB()
-	clf = ensemble.RandomForestClassifier(n_estimators=25, warm_start=True, criterion='entropy',
-		class_weight={1: 10, 2: 10, 10: 10, 15: 10, 17: 10, 19: 10, 20: 10, 22: 10, 23: 10, 24: 2, 25: 10, 26: 10, 27: 2, 28: 10, 29: 10})
+	# clf = ensemble.RandomForestClassifier(n_estimators=25)
+	clf = ensemble.AdaBoostClassifier()
 
 	print('beginning fitting')	
 	clf.fit(X, Y) 
